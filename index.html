@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>The Four M's Ledger · Rule №1</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://finnhub.io https://api.github.com https://stooq.com https://cdnjs.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'none'; manifest-src 'self'; worker-src 'self';" />
+<meta name="theme-color" content="#15281F" />
+<meta name="referrer" content="no-referrer" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" href="icon.svg" />
+<link rel="apple-touch-icon" href="icon.svg" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<style>
+  html,body{margin:0;background:#F1EBDD}*{box-sizing:border-box}
+  body{font-family:Georgia,'Times New Roman',serif}
+  input,select,textarea,button{font-family:inherit}
+  ::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:rgba(168,130,47,.4);border-radius:6px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+  if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('service-worker.js').catch(function(){});});}
+</script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo, useRef, useCallback } = React;
+
+/* ============================================================ constants */
+const C = {ink:"#15281F",ink2:"#1E3528",paper:"#F1EBDD",paper2:"#E7DEC9",card:"#FAF6EC",brass:"#A8822F",brassLt:"#C7A55A",green:"#2F7D52",amber:"#C0851A",red:"#AE3528",slate:"#5C6B63",line:"rgba(168,130,47,0.28)",mute:"#6E6552",ink70:"rgba(241,235,221,0.7)"};
+const MONO="ui-monospace,'SF Mono',Menlo,Consolas,monospace";
+const VERDICT={WONDERFUL:{label:"WONDERFUL",color:C.green,note:"Great business, fair price — own it."},WAIT:{label:"WAIT",color:C.amber,note:"Great business, no margin of safety — wait for the price."},AVOID:{label:"AVOID",color:C.red,note:"Business or management fails the test."},TOOHARD:{label:"TOO HARD",color:C.slate,note:"Outside your circle of competence — pass."},INCOMPLETE:{label:"RATE IT",color:C.mute,note:"Score all four M's to get a verdict."}};
+const MS=[{key:"meaning",label:"Meaning",hint:"Do you understand it and want to own it for 10 years?"},{key:"moat",label:"Moat",hint:"Durable advantage — brand, toll, switching, secret, or price."},{key:"management",label:"Management",hint:"Honest, able, owner-oriented. Survives an idiot at the helm?"},{key:"mos",label:"Margin of Safety",hint:"Price vs value. This is the gate — Rule №1 lives here."}];
+const MOAT_TYPES=["Brand","Toll","Switching","Secret","Price","None yet"];
+const TODAY=new Date().toISOString().slice(0,10);
+
+/* ============================================================ icons */
+const PATHS={plus:"M12 5v14M5 12h14",x:"M18 6 6 18M6 6l12 12",check:"M20 6 9 17l-5-5",chev:"m9 18 6-6-6-6",trash:"M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2",pencil:"M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z",alert:"M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01",info:"M12 16v-4M12 8h.01",up:"M22 7 13.5 15.5 8.5 10.5 2 17M16 7h6v6",down:"M22 17 13.5 8.5 8.5 13.5 2 7M16 17h6v-6",book:"M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z",refresh:"M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5",dl:"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3",ul:"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12",gear:"M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z",github:"M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22",save:"M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2zM17 21v-8H7v8M7 3v5h8",lock:"M19 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2zM7 11V7a5 5 0 0 1 10 0v4",unlock:"M7 11V7a5 5 0 0 1 9.9-1M19 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2z",bell:"M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0",shield:"M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"};
+function I({n,s=15,c="currentColor",sw=2,style}){return <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"-2px",...style}}>{n==="info"&&<circle cx="12" cy="12" r="10"/>}{n==="gear"&&<circle cx="12" cy="12" r="3"/>}{n==="gear"&&<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.14.36.55.62 1.01.62H21a2 2 0 1 1 0 4h-.09c-.46 0-.87.26-1.01.62z"/>}<path d={PATHS[n]}/></svg>;}
+
+/* ============================================================ crypto (Web Crypto: PBKDF2 -> AES-256-GCM) */
+const ENC=new TextEncoder(), DEC=new TextDecoder();
+async function deriveKey(pass,salt){const base=await crypto.subtle.importKey("raw",ENC.encode(pass),"PBKDF2",false,["deriveKey"]);return crypto.subtle.deriveKey({name:"PBKDF2",salt,iterations:250000,hash:"SHA-256"},base,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);}
+async function seal(plain,pass){const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12));const key=await deriveKey(pass,salt);const ct=await crypto.subtle.encrypt({name:"AES-GCM",iv},key,ENC.encode(plain));return {v:1,salt:[...salt],iv:[...iv],ct:[...new Uint8Array(ct)]};}
+async function unseal(blob,pass){const key=await deriveKey(pass,new Uint8Array(blob.salt));const pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:new Uint8Array(blob.iv)},key,new Uint8Array(blob.ct));return DEC.decode(pt);}
+
+/* ============================================================ pure logic */
+function verdictFor(c){const v=MS.map(m=>c.scores&&c.scores[m.key]);if(v.some(x=>x==null))return "INCOMPLETE";const[meaning,moat,mgmt,mos]=v;if(meaning<=1)return "TOOHARD";if(moat<=2||mgmt<=1)return "AVOID";const q=(meaning+moat+mgmt)/3;if(q>=3&&mos<3)return "WAIT";if(meaning>=3&&moat>=3&&mgmt>=3&&mos>=3)return "WONDERFUL";return "AVOID";}
+function stickerCalc(eps,growth,futurePE,marr=15,years=10){if(eps==null||growth==null)return null;const fe=Number(futurePE!=null?futurePE:Math.min(2*growth,50));const futureEPS=eps*Math.pow(1+growth/100,years);const futurePrice=futureEPS*fe;const sticker=futurePrice/Math.pow(1+marr/100,years);return {sticker,mos:sticker/2,futurePrice,futurePE:fe};}
+const money=n=>(n==null||isNaN(n))?"—":n.toLocaleString("en-US",{style:"currency",currency:"USD",maximumFractionDigits:Math.abs(n)>=100?0:2});
+const pct=n=>(n==null||isNaN(n))?"—":`${n>=0?"+":""}${n.toFixed(1)}%`;
+
+/* ============================================================ seed + storage */
+const SEED_COMPANIES=[
+  {id:"brkb",ticker:"BRK.B",name:"Berkshire Hathaway",quoteSymbol:"BRK.B",owned:true,shares:1,costPerShare:488,needsCost:true,price:488,priceDate:TODAY,moat:"Toll",scores:{meaning:5,moat:5,management:4,mos:3},big5:{roic:10,sales:6,eps:8,equity:18,fcf:9},sticker:{eps:22,growth:8,futurePE:14,marr:15,years:10},alertBelow:null,alertAbove:null,thesis:"The reference standard. Decentralized conglomerate, fortress balance sheet (~$400B cash). Watch the post-Buffett handoff to Greg Abel and the size problem. Wonderful, fairly priced."},
+  {id:"curi",ticker:"CURI",name:"CuriosityStream",quoteSymbol:"CURI",owned:true,shares:null,costPerShare:null,needsCost:true,price:3.05,priceDate:TODAY,moat:"None yet",scores:{meaning:3,moat:2,management:2,mos:2},big5:{},sticker:{marr:15,years:10},alertBelow:null,alertAbove:null,thesis:"Factual-content streamer, ~$190M micro-cap, unprofitable, ~10% dividend yield rich against the losses. Recent dilution. Speculative until the Big Five prove out."},
+  {id:"spcx",ticker:"SPCX",name:"SpaceX (Space Exploration Tech.)",quoteSymbol:"SPCX",owned:true,shares:null,costPerShare:null,needsCost:true,price:150,priceDate:TODAY,moat:"Toll",scores:{meaning:4,moat:5,management:5,mos:1},big5:{sales:33},sticker:{marr:15,years:10},alertBelow:null,alertAbove:null,thesis:"IPO'd 6/12/2026 at $135 (~$1.75T, ~94x revenue), merged with xAI. Dominant launch + Starlink moat, visionary but concentrated management (Musk ~85% voting). Lost ~$4.9B in 2025; Morningstar fair value ~$63. Wonderful company, no margin of safety."},
+];
+const SEED={portfolios:[{id:"p_son",name:"Son's Fund",companies:SEED_COMPANIES,history:[]}],activeId:"p_son"};
+const DEFAULT_SETTINGS={provider:"manual",autoRefresh:false,refreshMins:15,notifications:false,gh:{owner:"",repo:"Rule1",branch:"main",path:"data/portfolio.json"},security:{enabled:false,encryptPortfolio:false,autoLockMins:15}};
+const LS={data:"rule1.portfolio",dataEnc:"rule1.portfolio.enc",set:"rule1.settings",vault:"rule1.vault"};
+const lsGet=(k,f)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):f;}catch(e){return f;}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}};
+const lsDel=k=>{try{localStorage.removeItem(k);}catch(e){}};
+function migrate(raw){if(!raw)return null;if(raw.portfolios)return raw;if(raw.companies)return {portfolios:[{id:"p1",name:"Main",companies:raw.companies,history:raw.history||[]}],activeId:"p1"};if(Array.isArray(raw))return {portfolios:[{id:"p1",name:"Main",companies:raw,history:[]}],activeId:"p1"};return null;}
+
+/* ============================================================ APP */
+function App(){
+  const [data,setData]=useState(null);
+  const [settings,setSettings]=useState(()=>({...DEFAULT_SETTINGS,...lsGet(LS.set,{})}));
+  const [secrets,setSecrets]=useState({finnhubKey:"",ghToken:""});
+  const [locked,setLocked]=useState(false);
+  const [needEnc,setNeedEnc]=useState(false);
+  const [editing,setEditing]=useState(null);
+  const [open,setOpen]=useState(null);
+  const [drawer,setDrawer]=useState(null);
+  const [toast,setToast]=useState(null);
+  const passRef=useRef(null); const fileRef=useRef(); const alertedRef=useRef({}); const activityRef=useRef(Date.now());
+  const flash=(m,ok=true)=>{setToast({m,ok});setTimeout(()=>setToast(null),4000);};
+  const vaultExists=()=>!!lsGet(LS.vault,null);
+
+  useEffect(()=>{(async()=>{
+    const encBlob=lsGet(LS.dataEnc,null);
+    if(encBlob){setNeedEnc(true);setLocked(true);return;}
+    const local=migrate(lsGet(LS.data,null));
+    if(local){setData(local);}
+    else{try{const r=await fetch("./data/portfolio.json?ts="+Date.now());if(r.ok){const j=await r.json();setData(migrate(j)||JSON.parse(JSON.stringify(SEED)));}else setData(JSON.parse(JSON.stringify(SEED)));}catch(e){setData(JSON.parse(JSON.stringify(SEED)));}}
+    if(vaultExists())setLocked(true);
+  })();},[]);
+
+  const persist=useCallback(async(next)=>{setData(next);
+    if(settings.security.enabled&&settings.security.encryptPortfolio&&passRef.current){
+      try{const blob=await seal(JSON.stringify(next),passRef.current);lsSet(LS.dataEnc,blob);lsDel(LS.data);}catch(e){flash("Encrypt-save failed.",false);}
+    }else{lsSet(LS.data,next);lsDel(LS.dataEnc);}
+  },[settings]);
+  const saveSettings=s=>{setSettings(s);const {gh,...rest}=s;lsSet(LS.set,{...rest,gh:{owner:gh.owner,repo:gh.repo,branch:gh.branch,path:gh.path}});};
+
+  async function resealVault(sec,pass){try{const blob=await seal(JSON.stringify(sec),pass);lsSet(LS.vault,blob);}catch(e){flash("Vault save failed.",false);}}
+  const updateSecrets=async(sec)=>{setSecrets(sec);if(settings.security.enabled&&passRef.current)await resealVault(sec,passRef.current);};
+  async function unlock(pass){
+    try{
+      const v=lsGet(LS.vault,null); if(v){const s=JSON.parse(await unseal(v,pass));setSecrets({finnhubKey:s.finnhubKey||"",ghToken:s.ghToken||""});}
+      const enc=lsGet(LS.dataEnc,null); if(enc){const d=JSON.parse(await unseal(enc,pass));setData(migrate(d)||d);setNeedEnc(false);}
+      passRef.current=pass; setLocked(false); activityRef.current=Date.now(); flash("Unlocked.");
+    }catch(e){flash("Wrong passphrase.",false);}
+  }
+  function lock(){setSecrets({finnhubKey:"",ghToken:""});passRef.current=null;setLocked(true);if(lsGet(LS.dataEnc,null)){setNeedEnc(true);setData(null);}}
+  async function enableSecurity(pass,encPortfolio){
+    passRef.current=pass;
+    const sec={...settings.security,enabled:true,encryptPortfolio:!!encPortfolio};
+    setSettings(s=>{const ns={...s,security:sec};saveSettings(ns);return ns;});
+    await resealVault(secrets,pass);
+    if(encPortfolio&&data){try{const blob=await seal(JSON.stringify(data),pass);lsSet(LS.dataEnc,blob);lsDel(LS.data);}catch(e){}}
+    setLocked(false); flash("Encryption enabled. Secrets sealed with your passphrase.");
+  }
+  function disableSecurity(){lsDel(LS.vault);lsDel(LS.dataEnc);if(data)lsSet(LS.data,data);const sec={...settings.security,enabled:false,encryptPortfolio:false};setSettings(s=>{const ns={...s,security:sec};saveSettings(ns);return ns;});passRef.current=null;flash("Encryption disabled. Token will not be saved to disk.");}
+
+  useEffect(()=>{const bump=()=>{activityRef.current=Date.now();};["mousedown","keydown","touchstart"].forEach(e=>window.addEventListener(e,bump));
+    const t=setInterval(()=>{if(settings.security.enabled&&!locked&&passRef.current){const mins=settings.security.autoLockMins||15;if(Date.now()-activityRef.current>mins*60000)lock();}},20000);
+    return ()=>{clearInterval(t);["mousedown","keydown","touchstart"].forEach(e=>window.removeEventListener(e,bump));};
+  },[settings,locked]);
+
+  const active=()=>data&&data.portfolios.find(p=>p.id===data.activeId)||data&&data.portfolios[0];
+  const updateActive=(mut)=>{const ap=active();const np={...ap,...mut(ap)};persist({...data,portfolios:data.portfolios.map(p=>p.id===ap.id?np:p)});};
+  const saveCompany=c=>{const ap=active();const exists=ap.companies.some(x=>x.id===c.id);updateActive(p=>({companies:exists?p.companies.map(x=>x.id===c.id?c:x):[...p.companies,c]}));setEditing(null);flash("Saved to ledger.");};
+  const removeCompany=id=>updateActive(p=>({companies:p.companies.filter(x=>x.id!==id)}));
+
+  const totals=useMemo(()=>{const ap=active();let cost=0,val=0,priced=false;(ap&&ap.companies||[]).forEach(c=>{if(c.owned&&c.shares){priced=true;if(c.costPerShare)cost+=c.shares*c.costPerShare;if(c.price)val+=c.shares*c.price;}});return {cost,val,gain:val-cost,priced,pct:cost?((val-cost)/cost)*100:null};},[data]);
+
+  function snapshot(silent){const t=totals;if(!t.priced){if(!silent)flash("Nothing priced to snapshot yet.",false);return;}const entry={date:new Date().toISOString(),cost:Math.round(t.cost),value:Math.round(t.val),gain:Math.round(t.gain)};updateActive(p=>{const h=[...(p.history||[])];const last=h[h.length-1];if(last&&last.date.slice(0,10)===entry.date.slice(0,10))h[h.length-1]=entry;else h.push(entry);return {history:h};});if(!silent)flash("Performance snapshot recorded.");}
+
+  async function fetchQuote(c){const sym=(c.quoteSymbol||c.ticker||"").trim();if(!sym)return null;
+    if(settings.provider==="finnhub"){if(!secrets.finnhubKey)throw {needKey:true};const r=await fetch(`https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(sym)}&token=${secrets.finnhubKey}`);const j=await r.json();return (j&&typeof j.c==="number"&&j.c>0)?j.c:null;}
+    if(settings.provider==="stooq"){const code=sym.toLowerCase().replace(/\./g,"-")+(/\.(us|uk|de|pl)$/.test(sym.toLowerCase())?"":".us");const r=await fetch(`https://stooq.com/q/l/?s=${encodeURIComponent(code)}&f=sd2t2ohlcv&h&e=csv`);const txt=await r.text();const line=txt.trim().split("\n").pop().split(",");const close=parseFloat(line[6]);return isFinite(close)&&close>0?close:null;}
+    return null;}
+  async function refreshQuotes(silent){
+    if(settings.provider==="manual"){if(!silent){flash("Set a quote provider in Settings (Finnhub or Stooq).",false);setDrawer("settings");}return;}
+    if(locked&&vaultExists()){if(!silent)flash("Unlock to use live quotes.",false);return;}
+    if(!silent)flash("Fetching live quotes…");
+    const ap=active();let ok=0,fail=[];const comps=[...ap.companies];const triggered=[];
+    for(let i=0;i<comps.length;i++){const c=comps[i];try{const px=await fetchQuote(c);if(px!=null){const sc=c.sticker&&c.sticker.eps!=null?stickerCalc(c.sticker.eps,c.sticker.growth,c.sticker.futurePE,c.sticker.marr,c.sticker.years):null;collectAlerts(c,px,sc,triggered);comps[i]={...c,price:px,priceDate:new Date().toISOString().slice(0,10)};ok++;}else fail.push((c.quoteSymbol||c.ticker));}catch(e){if(e&&e.needKey){flash("Add your Finnhub key in Settings.",false);setDrawer("settings");return;}fail.push((c.quoteSymbol||c.ticker));}}
+    updateActive(()=>({companies:comps}));snapshot(true);fireAlerts(triggered);
+    if(!silent)flash(`Updated ${ok} quote${ok===1?"":"s"}.`+(fail.length?` No data: ${fail.join(", ")}.`:""),fail.length===0);
+  }
+  function collectAlerts(c,px,sc,out){const key=id=>c.id+":"+id;const push=(id,text)=>{if(alertedRef.current[key(id)]===Math.round(px))return;alertedRef.current[key(id)]=Math.round(px);out.push({text});};
+    if(sc&&px<=sc.mos)push("mos",`${c.ticker} entered the buy zone (≤ ${money(sc.mos)} MOS)`);
+    if(c.alertBelow!=null&&px<=c.alertBelow)push("below",`${c.ticker} fell to ${money(px)} (≤ your ${money(c.alertBelow)} alert)`);
+    if(c.alertAbove!=null&&px>=c.alertAbove)push("above",`${c.ticker} rose to ${money(px)} (≥ your ${money(c.alertAbove)} alert)`);}
+  function fireAlerts(list){if(!list.length)return;list.forEach(a=>{try{if(settings.notifications&&"Notification" in window&&Notification.permission==="granted")new Notification("Rule №1 alert",{body:a.text});}catch(e){}});flash(list.map(a=>a.text).join(" · "),true);}
+
+  useEffect(()=>{if(!data)return;
+    if(settings.autoRefresh&&settings.provider!=="manual"&&!(locked&&vaultExists()))refreshQuotes(true);
+    if(settings.autoRefresh&&settings.provider!=="manual"){const t=setInterval(()=>{if(!(locked&&vaultExists()))refreshQuotes(true);},Math.max(1,settings.refreshMins||15)*60000);return ()=>clearInterval(t);}
+  },[settings.autoRefresh,settings.refreshMins,settings.provider,data&&data.activeId,locked]);
+
+  function exportJSON(){const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="portfolio.json";a.click();flash("Exported portfolio.json — commit it to data/.");}
+  function importJSON(e){const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{try{persist(migrate(JSON.parse(rd.result)));flash("Imported.");}catch(err){flash("Couldn't parse that file.",false);}};rd.readAsText(f);e.target.value="";}
+  async function loadFromRepo(){try{const r=await fetch("./data/portfolio.json?ts="+Date.now());if(!r.ok)throw 0;persist(migrate(await r.json()));flash("Loaded committed data/portfolio.json.");}catch(e){flash("No data/portfolio.json found here.",false);}}
+  async function saveToGitHub(){const g=settings.gh||{};if(locked&&vaultExists()){flash("Unlock first.",false);return;}if(!g.owner||!g.repo||!secrets.ghToken){flash("Add GitHub owner/repo + token in Settings.",false);setDrawer("settings");return;}
+    snapshot(true);const url=`https://api.github.com/repos/${g.owner}/${g.repo}/contents/${g.path||"data/portfolio.json"}`;flash("Committing to GitHub…");
+    try{let sha;const head=await fetch(url+`?ref=${g.branch||"main"}`,{headers:{Authorization:"Bearer "+secrets.ghToken,Accept:"application/vnd.github+json"}});if(head.ok)sha=(await head.json()).sha;
+      const body={message:`Update portfolio — ${new Date().toISOString().slice(0,16).replace("T"," ")}`,content:btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2)))),branch:g.branch||"main"};if(sha)body.sha=sha;
+      const put=await fetch(url,{method:"PUT",headers:{Authorization:"Bearer "+secrets.ghToken,Accept:"application/vnd.github+json","Content-Type":"application/json"},body:JSON.stringify(body)});
+      if(put.ok)flash("Committed to "+g.owner+"/"+g.repo+" ✓");else flash("GitHub error: "+((await put.json()).message||put.status),false);
+    }catch(e){flash("GitHub request failed.",false);}
+  }
+
+  function addPortfolio(){const name=prompt("Name this portfolio (e.g., Personal, IRA):");if(!name)return;const id="p"+Date.now();persist({...data,portfolios:[...data.portfolios,{id,name,companies:[],history:[]}],activeId:id});}
+  function renamePortfolio(){const ap=active();const name=prompt("Rename portfolio:",ap.name);if(!name)return;persist({...data,portfolios:data.portfolios.map(p=>p.id===ap.id?{...p,name}:p)});}
+  function deletePortfolio(){if(data.portfolios.length<2){flash("Keep at least one portfolio.",false);return;}const ap=active();if(!confirm(`Delete portfolio “${ap.name}” and its holdings?`))return;const rest=data.portfolios.filter(p=>p.id!==ap.id);persist({...data,portfolios:rest,activeId:rest[0].id});}
+
+  if(needEnc&&locked) return <LockScreen onUnlock={unlock}/>;
+  if(!data) return <div style={{minHeight:"100vh",display:"grid",placeItems:"center",color:C.mute}}>Opening the ledger…</div>;
+  const ap=active(); const owned=ap.companies.filter(c=>c.owned), watch=ap.companies.filter(c=>!c.owned);
+  const isLocked=locked&&vaultExists();
+
+  return (
+  <div style={{minHeight:"100vh",color:C.ink}}>
+    <header style={{background:C.ink,color:C.paper,borderBottom:`3px solid ${C.brass}`}}>
+      <div style={{maxWidth:1060,margin:"0 auto",padding:"14px 18px"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+          <div style={{color:C.brassLt,fontFamily:MONO,fontSize:10.5,letterSpacing:3}}>RULE №1 — NEVER LOSE MONEY · RULE №2 — SEE RULE №1</div>
+          <div style={{display:"flex",gap:7,flexWrap:"wrap",alignItems:"center"}}>
+            {settings.security.enabled&&<button onClick={()=>isLocked?null:lock()} title={isLocked?"Locked":"Lock now"} style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",color:isLocked?C.amber:C.green,background:"rgba(255,255,255,.06)",border:`1px solid ${C.brass}`,borderRadius:7,padding:"6px 9px",fontSize:12,fontFamily:MONO}}><I n={isLocked?"lock":"unlock"} s={13} c={isLocked?C.amber:C.green}/>{isLocked?"Locked":"Lock"}</button>}
+            <Tbtn onClick={()=>refreshQuotes(false)} icon="refresh">Refresh</Tbtn>
+            <Tbtn onClick={saveToGitHub} icon="github">Save to repo</Tbtn>
+            <Tbtn onClick={()=>setDrawer("history")} icon="up">Performance</Tbtn>
+            <Tbtn onClick={()=>setDrawer("principles")} icon="book"/>
+            <Tbtn onClick={()=>setDrawer("settings")} icon="gear"/>
+          </div>
+        </div>
+        <div style={{display:"flex",alignItems:"flex-end",justifyContent:"space-between",flexWrap:"wrap",gap:10,marginTop:6}}>
+          <h1 style={{fontSize:26,fontWeight:700,margin:0,lineHeight:1}}>The Four M&apos;s Ledger</h1>
+          {isLocked&&<span style={{fontSize:11.5,color:C.amber,fontFamily:MONO}}><I n="lock" s={12} c={C.amber}/> Vault locked — unlock for quotes &amp; repo save</span>}
+        </div>
+        <div style={{display:"flex",gap:6,alignItems:"center",marginTop:10,flexWrap:"wrap"}}>
+          {data.portfolios.map(p=><button key={p.id} onClick={()=>persist({...data,activeId:p.id})} style={{cursor:"pointer",fontFamily:MONO,fontSize:12,padding:"5px 11px",borderRadius:20,border:`1px solid ${C.brass}`,background:p.id===data.activeId?C.brass:"transparent",color:p.id===data.activeId?C.ink:C.paper}}>{p.name}</button>)}
+          <button onClick={addPortfolio} title="New portfolio" style={{cursor:"pointer",color:C.brassLt,background:"transparent",border:`1px dashed ${C.brass}`,borderRadius:20,padding:"5px 9px"}}><I n="plus" s={13} c={C.brassLt}/></button>
+          <button onClick={renamePortfolio} title="Rename" style={{cursor:"pointer",color:C.ink70,background:"none",border:"none"}}><I n="pencil" s={13} c={C.ink70}/></button>
+          <button onClick={deletePortfolio} title="Delete portfolio" style={{cursor:"pointer",color:C.ink70,background:"none",border:"none"}}><I n="trash" s={13} c={C.ink70}/></button>
+        </div>
+      </div>
+    </header>
+
+    <main style={{maxWidth:1060,margin:"0 auto",padding:18}}>
+      <section style={{background:C.ink2,color:C.paper,borderRadius:10,padding:"15px 18px",marginBottom:16}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:16}}>
+          <Stat label={ap.name+" · cost"} value={money(totals.cost||null)}/>
+          <Stat label="Market value" value={money(totals.val||null)}/>
+          <Stat label="Unrealized" value={money(totals.priced?totals.gain:null)} accent={totals.gain>=0?C.brassLt:C.red} sub={totals.pct!=null?pct(totals.pct):null}/>
+          <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+            <Tbtn onClick={()=>snapshot(false)} icon="save" dark>Snapshot</Tbtn>
+            <Tbtn onClick={exportJSON} icon="dl" dark>Export</Tbtn>
+            <Tbtn onClick={()=>fileRef.current.click()} icon="ul" dark>Import</Tbtn>
+            <input ref={fileRef} type="file" accept="application/json" onChange={importJSON} style={{display:"none"}}/>
+          </div>
+        </div>
+      </section>
+
+      <SectionHead title="Owned" count={owned.length} onAdd={()=>setEditing(blank(true))}/>
+      {owned.map(c=><Card key={c.id} c={c} expanded={open===c.id} onToggle={()=>setOpen(open===c.id?null:c.id)} onEdit={()=>setEditing(c)} onDelete={()=>removeCompany(c.id)}/>)}
+      <div style={{height:20}}/>
+      <SectionHead title="Watchlist" count={watch.length} onAdd={()=>setEditing(blank(false))}/>
+      {watch.length===0&&<div style={{color:C.mute,fontSize:13.5,padding:"8px 2px"}}>Nothing on watch yet. Add a candidate to run it through the four M&apos;s before you ever buy.</div>}
+      {watch.map(c=><Card key={c.id} c={c} expanded={open===c.id} onToggle={()=>setOpen(open===c.id?null:c.id)} onEdit={()=>setEditing(c)} onDelete={()=>removeCompany(c.id)}/>)}
+
+      <footer style={{color:C.mute,fontSize:11.5,marginTop:26,lineHeight:1.6,fontFamily:MONO}}>
+        Not investment advice. Encryption protects data at rest in this browser — it can&apos;t protect a compromised device or a shared passphrase. Reading 10-Ks is the work you do with Claude in chat; this ledger is your scorecard, record, and performance log.
+      </footer>
+    </main>
+
+    {editing&&<Editor c={editing} onSave={saveCompany} onClose={()=>setEditing(null)}/>}
+    {drawer==="principles"&&<Principles onClose={()=>setDrawer(null)}/>}
+    {drawer==="history"&&<History history={ap.history||[]} name={ap.name} onClose={()=>setDrawer(null)}/>}
+    {drawer==="settings"&&<Settings settings={settings} secrets={secrets} locked={isLocked} onSaveSettings={saveSettings} onUpdateSecrets={updateSecrets} onEnableSec={enableSecurity} onDisableSec={disableSecurity} onUnlock={unlock} onReload={loadFromRepo} flash={flash} onClose={()=>setDrawer(null)}/>}
+    {toast&&<div style={{position:"fixed",bottom:18,left:"50%",transform:"translateX(-50%)",background:toast.ok?C.ink:C.red,color:C.paper,padding:"10px 16px",borderRadius:8,fontSize:13,fontFamily:MONO,maxWidth:"92%",boxShadow:"0 6px 24px rgba(0,0,0,.25)",zIndex:90}}>{toast.m}</div>}
+  </div>);
+}
+
+/* ============================================================ lock screen */
+function LockScreen({onUnlock}){const[p,setP]=useState("");return(
+  <div style={{minHeight:"100vh",background:C.ink,color:C.paper,display:"grid",placeItems:"center",padding:20}}>
+    <div style={{textAlign:"center",maxWidth:340}}>
+      <I n="shield" s={40} c={C.brassLt}/>
+      <h1 style={{fontSize:22,margin:"10px 0 4px"}}>The Ledger is sealed</h1>
+      <p style={{color:C.ink70,fontSize:13,marginBottom:14}}>Enter your passphrase to decrypt your data.</p>
+      <input autoFocus type="password" value={p} onChange={e=>setP(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")onUnlock(p);}} placeholder="Passphrase" style={{...inp,textAlign:"center",marginBottom:10}}/>
+      <button onClick={()=>onUnlock(p)} style={{...btn(C.brass,C.ink),width:"100%",justifyContent:"center",padding:"10px",fontSize:14}}><I n="unlock" s={15}/> Unlock</button>
+    </div>
+  </div>);}
+
+/* ============================================================ shared bits */
+function Tbtn({onClick,icon,children,dark}){return <button onClick={onClick} style={{display:"flex",alignItems:"center",gap:6,cursor:"pointer",color:C.paper,background:dark?"rgba(255,255,255,.06)":"transparent",border:`1px solid ${C.brass}`,borderRadius:7,padding:children?"6px 11px":"6px 9px",fontSize:12.5,fontFamily:MONO}}>{icon&&<I n={icon} s={14} c={C.brassLt}/>}{children}</button>;}
+function Stat({label,value,sub,accent}){return <div><div style={{color:C.brassLt,fontSize:10.5,letterSpacing:2,fontFamily:MONO}}>{label.toUpperCase()}</div><div style={{fontSize:22,fontWeight:700,color:accent||C.paper,fontFamily:MONO}}>{value}</div>{sub&&<div style={{color:accent||C.ink70,fontSize:12,fontFamily:MONO}}>{sub}</div>}</div>;}
+function SectionHead({title,count,onAdd}){return <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:`1px solid ${C.line}`,paddingBottom:6,marginBottom:12}}><h2 style={{fontSize:17,fontWeight:700,margin:0}}>{title} <span style={{color:C.mute,fontFamily:MONO,fontSize:13}}>· {count}</span></h2><button onClick={onAdd} style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",color:C.ink,border:`1px solid ${C.brass}`,background:C.card,borderRadius:6,padding:"5px 11px",fontSize:12.5,fontFamily:MONO}}><I n="plus" s={14}/> Add</button></div>;}
+function Stamp({v}){const d=VERDICT[v];return <div style={{border:`2px solid ${d.color}`,color:d.color,transform:"rotate(-4deg)",padding:"4px 12px",borderRadius:4,letterSpacing:2.5,fontWeight:700,fontSize:13,fontFamily:MONO,background:"rgba(255,255,255,.35)",whiteSpace:"nowrap"}}>{d.label}</div>;}
+function MRow({k,score}){const m=MS.find(x=>x.key===k);const color=score==null?C.mute:score>=3?C.green:score===2?C.amber:C.red;return <div style={{display:"flex",alignItems:"center",gap:8,fontSize:12}}><span style={{width:18,height:18,borderRadius:4,background:C.ink,color:C.brassLt,fontFamily:MONO,fontSize:11,display:"grid",placeItems:"center"}}>{m.label[0]}</span><span style={{color:C.ink,width:92,fontWeight:600}}>{m.label}</span><span style={{display:"flex",gap:4}}>{[1,2,3,4,5].map(i=><span key={i} style={{width:7,height:7,borderRadius:8,background:score!=null&&i<=score?color:"transparent",border:`1px solid ${score!=null&&i<=score?color:C.line}`}}/>)}</span></div>;}
+const Lbl=({children,style})=> <span style={{color:C.brass,fontFamily:MONO,fontSize:11,letterSpacing:1.5,...style}}>{typeof children==="string"?children.toUpperCase():children}</span>;
+
+function buildAlerts(c,sc){const a=[];if(c.needsCost)a.push({color:C.amber,icon:"alert",text:"Placeholder cost/shares — enter your real numbers."});if(sc&&c.price!=null){if(c.price<=sc.mos)a.push({color:C.green,icon:"check",text:"In the buy zone — at or below your MOS price."});else if(c.price<=sc.sticker)a.push({color:C.amber,icon:"info",text:"Below sticker but above MOS — fair, not a bargain."});else a.push({color:C.red,icon:"alert",text:"Above sticker value — no margin of safety here."});}
+  if(c.alertBelow!=null&&c.price!=null&&c.price<=c.alertBelow)a.push({color:C.red,icon:"bell",text:`At/under your ${money(c.alertBelow)} low alert.`});
+  if(c.alertAbove!=null&&c.price!=null&&c.price>=c.alertAbove)a.push({color:C.brass,icon:"bell",text:`At/over your ${money(c.alertAbove)} high alert.`});
+  MS.forEach(m=>{if(c.scores&&c.scores[m.key]!=null&&c.scores[m.key]<=1)a.push({color:C.red,icon:"alert",text:`${m.label} ${c.scores[m.key]}/5 — a fundamental weakness.`});});
+  ["roic","sales","eps","equity","fcf"].forEach(k=>{if(c.big5&&c.big5[k]!=null&&c.big5[k]<10)a.push({color:C.amber,icon:"info",text:`${k.toUpperCase()} growth ${c.big5[k]}% below the 10% floor.`});});return a;}
+
+function Card({c,expanded,onToggle,onEdit,onDelete}){const v=verdictFor(c);const posVal=c.shares&&c.price?c.shares*c.price:null;const cost=c.shares&&c.costPerShare?c.shares*c.costPerShare:null;const gain=posVal!=null&&cost!=null?posVal-cost:null;const gpct=gain!=null&&cost?(gain/cost)*100:null;const sc=c.sticker&&c.sticker.eps!=null?stickerCalc(c.sticker.eps,c.sticker.growth,c.sticker.futurePE,c.sticker.marr,c.sticker.years):null;const alerts=buildAlerts(c,sc);
+  return <div style={{background:C.card,border:`1px solid ${C.line}`,borderRadius:10,marginBottom:10,overflow:"hidden"}}>
+    <div onClick={onToggle} style={{display:"flex",alignItems:"center",gap:12,padding:"13px 15px",cursor:"pointer"}}>
+      <div style={{minWidth:0,flex:1}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}><span style={{fontFamily:MONO,fontWeight:700,fontSize:14,color:C.brass}}>{c.ticker}</span><span style={{fontSize:15.5,fontWeight:700}}>{c.name}</span>{c.needsCost&&<span style={{color:C.amber}}><I n="alert" s={14}/></span>}</div>
+        <div style={{display:"flex",gap:16,marginTop:4,fontFamily:MONO,fontSize:12,flexWrap:"wrap"}}><span style={{color:C.mute}}>Price {money(c.price)} <span style={{opacity:.7}}>· {c.priceDate||"—"}</span></span>{posVal!=null&&<span>Value {money(posVal)}</span>}{gain!=null&&<span style={{color:gain>=0?C.green:C.red}}><I n={gain>=0?"up":"down"} s={11}/> {pct(gpct)}</span>}</div>
+      </div>
+      <Stamp v={v}/><span style={{color:C.mute,transform:expanded?"rotate(90deg)":"none",transition:"transform .15s"}}><I n="chev" s={18}/></span>
+    </div>
+    {expanded&&<div style={{borderTop:`1px solid ${C.line}`,padding:"14px 15px",background:C.paper}}>
+      <div style={{display:"grid",gap:16,gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))"}}>
+        <div><Lbl>The four M&apos;s</Lbl><div style={{display:"flex",flexDirection:"column",gap:6,marginTop:5}}>{MS.map(m=><MRow key={m.key} k={m.key} score={c.scores&&c.scores[m.key]}/>)}</div><div style={{marginTop:8,fontSize:12,color:C.mute}}>Moat type: <b style={{color:C.ink}}>{c.moat||"—"}</b></div><div style={{marginTop:6,fontSize:12.5,color:VERDICT[v].color,fontStyle:"italic"}}>{VERDICT[v].note}</div></div>
+        <div><Lbl>Sticker price (Rule One)</Lbl>{sc?<div style={{fontFamily:MONO,fontSize:12.5,marginTop:4,lineHeight:1.7}}><div>Sticker value: <b>{money(sc.sticker)}</b></div><div>MOS buy price (½): <b style={{color:C.green}}>{money(sc.mos)}</b></div><div style={{color:C.mute}}>Now {money(c.price)} · future P/E {sc.futurePE}</div></div>:<div style={{fontSize:12.5,color:C.mute,marginTop:4}}>Add current EPS &amp; growth in Edit to compute sticker &amp; MOS.</div>}
+          <Lbl style={{marginTop:12,display:"block"}}>Big Five (≥10% passes)</Lbl><div style={{display:"flex",flexWrap:"wrap",gap:"4px 12px",marginTop:4,fontFamily:MONO,fontSize:11.5}}>{[["ROIC","roic"],["Sales","sales"],["EPS","eps"],["Equity","equity"],["FCF","fcf"]].map(([lab,key])=>{const val=c.big5&&c.big5[key];const ok=val!=null&&val>=10;return <span key={key} style={{color:val==null?C.mute:ok?C.green:C.red}}>{lab} {val==null?"—":val+"%"}{val!=null&&(ok?" ✓":" ✗")}</span>;})}</div></div>
+      </div>
+      {alerts.length>0&&<div style={{marginTop:12,background:C.card,border:`1px solid ${C.line}`,borderRadius:8,padding:"10px 12px"}}><Lbl>Flags</Lbl><ul style={{margin:"5px 0 0",paddingLeft:0,listStyle:"none"}}>{alerts.map((a,i)=><li key={i} style={{fontSize:12.5,color:a.color,display:"flex",gap:7,alignItems:"flex-start",marginBottom:3}}><span style={{marginTop:1}}><I n={a.icon} s={13}/></span><span>{a.text}</span></li>)}</ul></div>}
+      {c.thesis&&<p style={{marginTop:12,fontSize:13.5,lineHeight:1.55}}><Lbl>Thesis</Lbl><br/>{c.thesis}</p>}
+      <div style={{display:"flex",gap:8,marginTop:12}}><button onClick={onEdit} style={btn(C.ink,C.paper)}><I n="pencil" s={13}/> Edit</button><button onClick={()=>{if(confirm(`Remove ${c.ticker}?`))onDelete();}} style={btn("transparent",C.red,C.red)}><I n="trash" s={13}/> Remove</button></div>
+    </div>}
+  </div>;}
+
+/* ============================================================ editor */
+function blank(owned){return {id:"c"+Date.now(),ticker:"",name:"",quoteSymbol:"",owned,shares:null,costPerShare:null,price:null,priceDate:TODAY,moat:"None yet",scores:{},big5:{},sticker:{marr:15,years:10},alertBelow:null,alertAbove:null,thesis:"",needsCost:false};}
+function Editor({c,onSave,onClose}){const[d,setD]=useState(JSON.parse(JSON.stringify(c)));const set=(k,v)=>setD(p=>({...p,[k]:v}));const setNum=(k,v)=>set(k,v===""?null:Number(v));const setScore=(k,v)=>setD(p=>({...p,scores:{...p.scores,[k]:v}}));const setBig=(k,v)=>setD(p=>({...p,big5:{...p.big5,[k]:v===""?null:Number(v)}}));const setStk=(k,v)=>setD(p=>({...p,sticker:{...p.sticker,[k]:v===""?null:Number(v)}}));const sc=d.sticker&&d.sticker.eps!=null&&d.sticker.growth!=null?stickerCalc(d.sticker.eps,d.sticker.growth,d.sticker.futurePE,d.sticker.marr,d.sticker.years):null;
+  return <Modal title={c.ticker?`Edit ${c.ticker}`:"New company"} onClose={onClose} wide>
+    <Row><Field label="Ticker"><input style={inp} value={d.ticker} onChange={e=>set("ticker",e.target.value.toUpperCase())}/></Field><Field label="Name" wide><input style={inp} value={d.name} onChange={e=>set("name",e.target.value)}/></Field></Row>
+    <Row><Field label="Owned?"><select style={inp} value={d.owned?"y":"n"} onChange={e=>set("owned",e.target.value==="y")}><option value="y">Owned</option><option value="n">Watchlist</option></select></Field><Field label="Moat type"><select style={inp} value={d.moat} onChange={e=>set("moat",e.target.value)}>{MOAT_TYPES.map(m=><option key={m}>{m}</option>)}</select></Field><Field label="Quote symbol"><input style={inp} placeholder={d.ticker} value={d.quoteSymbol||""} onChange={e=>set("quoteSymbol",e.target.value.toUpperCase())}/></Field></Row>
+    <Row><Field label="Shares"><input style={inp} type="number" value={d.shares??""} onChange={e=>setNum("shares",e.target.value)}/></Field><Field label="Cost / share"><input style={inp} type="number" value={d.costPerShare??""} onChange={e=>setNum("costPerShare",e.target.value)}/></Field><Field label="Current price"><input style={inp} type="number" value={d.price??""} onChange={e=>setNum("price",e.target.value)}/></Field></Row>
+    {d.needsCost&&<label style={{display:"flex",alignItems:"center",gap:8,fontSize:12.5,color:C.amber,margin:"2px 0 10px"}}><input type="checkbox" checked={d.needsCost} onChange={e=>set("needsCost",e.target.checked)}/>Placeholder numbers (uncheck once real)</label>}
+    <Lbl style={{marginTop:6,display:"block"}}><I n="bell" s={12}/> Price alerts (optional)</Lbl>
+    <Row><Field label="Alert if ≤"><input style={inp} type="number" value={d.alertBelow??""} onChange={e=>setNum("alertBelow",e.target.value)}/></Field><Field label="Alert if ≥"><input style={inp} type="number" value={d.alertAbove??""} onChange={e=>setNum("alertAbove",e.target.value)}/></Field><div style={{flex:1}}/></Row>
+    <Lbl style={{marginTop:8,display:"block"}}>Score the four M&apos;s (0–5)</Lbl>
+    {MS.map(m=><div key={m.key} style={{margin:"8px 0"}}><div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}><span style={{fontSize:13,fontWeight:600}}>{m.label}</span><span style={{fontSize:11,color:C.mute,maxWidth:320,textAlign:"right"}}>{m.hint}</span></div><div style={{display:"flex",gap:6,marginTop:4}}>{[0,1,2,3,4,5].map(n=><button key={n} onClick={()=>setScore(m.key,n)} style={{width:34,height:30,borderRadius:6,fontFamily:MONO,fontWeight:700,cursor:"pointer",border:`1px solid ${C.line}`,background:d.scores[m.key]===n?(n>=3?C.green:n===2?C.amber:C.red):C.card,color:d.scores[m.key]===n?"#fff":C.ink}}>{n}</button>)}</div></div>)}
+    <Lbl style={{marginTop:12,display:"block"}}>Sticker price — Phil Town method</Lbl>
+    <Row><Field label="Current EPS"><input style={inp} type="number" value={d.sticker.eps??""} onChange={e=>setStk("eps",e.target.value)}/></Field><Field label="Est. growth %"><input style={inp} type="number" value={d.sticker.growth??""} onChange={e=>setStk("growth",e.target.value)}/></Field><Field label="Future P/E"><input style={inp} type="number" placeholder="2×growth" value={d.sticker.futurePE??""} onChange={e=>setStk("futurePE",e.target.value)}/></Field></Row>
+    {sc&&<div style={{background:C.ink2,color:C.paper,borderRadius:8,padding:"10px 12px",fontFamily:MONO,fontSize:12.5,lineHeight:1.7}}>Sticker value <b>{money(sc.sticker)}</b> · buy at MOS (½) <b style={{color:C.brassLt}}>{money(sc.mos)}</b><div style={{color:C.ink70}}>10-yr future price {money(sc.futurePrice)} @ {sc.futurePE} P/E, discounted at {d.sticker.marr}%</div></div>}
+    <Lbl style={{marginTop:12,display:"block"}}>Big Five growth (%)</Lbl>
+    <Row>{[["ROIC","roic"],["Sales","sales"],["EPS","eps"]].map(([lab,k])=><Field key={k} label={lab}><input style={inp} type="number" value={d.big5[k]??""} onChange={e=>setBig(k,e.target.value)}/></Field>)}</Row>
+    <Row>{[["Equity/BVPS","equity"],["Free cash flow","fcf"]].map(([lab,k])=><Field key={k} label={lab}><input style={inp} type="number" value={d.big5[k]??""} onChange={e=>setBig(k,e.target.value)}/></Field>)}<div style={{flex:1}}/></Row>
+    <Lbl style={{marginTop:12,display:"block"}}>Thesis / notes</Lbl>
+    <textarea style={{...inp,height:84,resize:"vertical"}} value={d.thesis} onChange={e=>set("thesis",e.target.value)} placeholder="Why you'd own this for a decade — and what would change your mind."/>
+    <div style={{display:"flex",gap:8,marginTop:16}}><button onClick={()=>onSave(d)} disabled={!d.ticker||!d.name} style={{...btn(C.green,"#fff"),opacity:(!d.ticker||!d.name)?.5:1,fontSize:14,padding:"9px 16px"}}><I n="check" s={15}/> Save</button><button onClick={onClose} style={btn("transparent",C.ink,C.line)}>Cancel</button></div>
+  </Modal>;}
+
+/* ============================================================ settings */
+function Settings({settings,secrets,locked,onSaveSettings,onUpdateSecrets,onEnableSec,onDisableSec,onUnlock,onReload,flash,onClose}){
+  const[s,setS]=useState(JSON.parse(JSON.stringify(settings)));
+  const[fk,setFk]=useState(secrets.finnhubKey);const[tok,setTok]=useState(secrets.ghToken);
+  const[p1,setP1]=useState("");const[p2,setP2]=useState("");const[encPort,setEncPort]=useState(settings.security.encryptPortfolio);const[unlockPass,setUnlockPass]=useState("");
+  const gh=(k,v)=>setS(p=>({...p,gh:{...p.gh,[k]:v}}));const sec=(k,v)=>setS(p=>({...p,security:{...p.security,[k]:v}}));
+  const applyAll=async()=>{onSaveSettings(s);await onUpdateSecrets({finnhubKey:fk,ghToken:tok});if(s.notifications){try{if("Notification"in window&&Notification.permission==="default")await Notification.requestPermission();}catch(e){}}flash("Settings saved.");onClose();};
+  return <Modal title="Settings" onClose={onClose} wide>
+    <div style={{background:C.card,border:`1px solid ${C.line}`,borderRadius:9,padding:"12px 14px",marginBottom:14}}>
+      <Lbl><I n="shield" s={12}/> Security &amp; encryption</Lbl>
+      {!settings.security.enabled?<div>
+        <p style={{fontSize:12.5,color:C.mute,margin:"6px 0 8px",lineHeight:1.5}}>Set a passphrase to seal your API key and GitHub token with AES-256-GCM (PBKDF2, 250k iterations). The passphrase is never stored. Without it, a GitHub token is kept in memory only and never written to disk.</p>
+        <Row><Field label="Passphrase"><input style={inp} type="password" value={p1} onChange={e=>setP1(e.target.value)}/></Field><Field label="Confirm"><input style={inp} type="password" value={p2} onChange={e=>setP2(e.target.value)}/></Field></Row>
+        <label style={{display:"flex",alignItems:"center",gap:8,fontSize:12.5,margin:"2px 0 8px"}}><input type="checkbox" checked={encPort} onChange={e=>setEncPort(e.target.checked)}/>Also encrypt the whole portfolio at rest (unlock required to view)</label>
+        <button onClick={()=>{if(p1.length<8)return flash("Use at least 8 characters.",false);if(p1!==p2)return flash("Passphrases don't match.",false);onEnableSec(p1,encPort);}} style={{...btn(C.green,"#fff"),padding:"8px 14px"}}><I n="lock" s={14}/> Enable encryption</button>
+      </div>:<div>
+        <p style={{fontSize:12.5,color:C.green,margin:"6px 0 8px"}}><I n="check" s={13}/> Encryption is on{settings.security.encryptPortfolio?" · portfolio encrypted at rest":""}. {locked?"Vault is locked.":"Vault unlocked for this session."}</p>
+        {locked&&<Row><Field label="Unlock now" wide><input style={inp} type="password" value={unlockPass} onChange={e=>setUnlockPass(e.target.value)} placeholder="Passphrase"/></Field><div style={{display:"flex",alignItems:"flex-end",marginBottom:6}}><button onClick={()=>onUnlock(unlockPass)} style={btn(C.brass,C.ink)}><I n="unlock" s={13}/> Unlock</button></div></Row>}
+        <Row><Field label="Auto-lock after (min)"><input style={inp} type="number" value={s.security.autoLockMins} onChange={e=>sec("autoLockMins",Number(e.target.value))}/></Field><div style={{flex:2}}/></Row>
+        <button onClick={onDisableSec} style={btn("transparent",C.red,C.red)}><I n="unlock" s={13}/> Disable encryption</button>
+      </div>}
+    </div>
+
+    <Lbl style={{display:"block"}}>Live quotes</Lbl>
+    <Row><Field label="Provider"><select style={inp} value={s.provider} onChange={e=>setS(p=>({...p,provider:e.target.value}))}><option value="manual">Manual (no fetch)</option><option value="finnhub">Finnhub (free key)</option><option value="stooq">Stooq (keyless, best-effort)</option></select></Field>
+      <Field label="Auto-refresh"><select style={inp} value={s.autoRefresh?"y":"n"} onChange={e=>setS(p=>({...p,autoRefresh:e.target.value==="y"}))}><option value="n">Off</option><option value="y">On</option></select></Field>
+      <Field label="Every (min)"><input style={inp} type="number" value={s.refreshMins} onChange={e=>setS(p=>({...p,refreshMins:Number(e.target.value)}))}/></Field></Row>
+    {s.provider==="finnhub"&&<Field label="Finnhub API key"><input style={inp} type="password" placeholder={locked?"unlock to edit":"paste key"} value={fk} onChange={e=>setFk(e.target.value)}/></Field>}
+    {s.provider==="stooq"&&<p style={{fontSize:12,color:C.mute,lineHeight:1.5,margin:"2px 0"}}>Keyless via stooq.com — your browser may block it (CORS). If symbols come back empty, set a per-company quote symbol like <code>brk-b.us</code> or switch to Finnhub.</p>}
+    <label style={{display:"flex",alignItems:"center",gap:8,fontSize:12.5,margin:"8px 0"}}><input type="checkbox" checked={s.notifications} onChange={e=>setS(p=>({...p,notifications:e.target.checked}))}/><I n="bell" s={13}/> Browser notifications when a price alert triggers</label>
+
+    <Lbl style={{display:"block",marginTop:8}}><I n="github" s={12}/> Save to GitHub</Lbl>
+    <p style={{fontSize:12,color:C.mute,margin:"4px 0 8px",lineHeight:1.5}}>Use a fine-grained token scoped to <b>only</b> the Rule1 repo, Contents: read/write, with a short expiry. The token persists only inside your encrypted vault — enable encryption above to keep it across sessions; otherwise it&apos;s session-only.</p>
+    <Row><Field label="Owner / user"><input style={inp} value={s.gh.owner} onChange={e=>gh("owner",e.target.value)}/></Field><Field label="Repo"><input style={inp} value={s.gh.repo} onChange={e=>gh("repo",e.target.value)}/></Field></Row>
+    <Row><Field label="Branch"><input style={inp} value={s.gh.branch} onChange={e=>gh("branch",e.target.value)}/></Field><Field label="File path" wide><input style={inp} value={s.gh.path} onChange={e=>gh("path",e.target.value)}/></Field></Row>
+    <Field label="Fine-grained token"><input style={inp} type="password" placeholder={locked?"unlock to edit":"github_pat_…"} value={tok} onChange={e=>setTok(e.target.value)}/></Field>
+
+    <div style={{display:"flex",gap:8,marginTop:16,flexWrap:"wrap"}}><button onClick={applyAll} style={{...btn(C.green,"#fff"),padding:"9px 16px"}}><I n="check" s={15}/> Save settings</button><button onClick={onReload} style={btn("transparent",C.ink,C.line)}><I n="refresh" s={13}/> Reload repo file</button><button onClick={onClose} style={btn("transparent",C.ink,C.line)}>Close</button></div>
+  </Modal>;}
+
+/* ============================================================ history / principles / shell */
+function History({history,name,onClose}){const pts=history.filter(h=>h.value!=null);return <Modal title={`Performance · ${name}`} onClose={onClose}>{pts.length<2?<p style={{fontSize:13.5,color:C.mute,lineHeight:1.5}}>Hit “Snapshot” (or Refresh / Save to repo) on a couple of different days to start the performance curve. Every snapshot travels with your exports and commits.</p>:<Spark pts={pts}/>}{pts.length>0&&<div style={{marginTop:14,maxHeight:240,overflow:"auto"}}><table style={{width:"100%",borderCollapse:"collapse",fontFamily:MONO,fontSize:12}}><thead><tr style={{color:C.brass,textAlign:"left"}}><th style={th}>Date</th><th style={th}>Value</th><th style={th}>Gain</th></tr></thead><tbody>{[...pts].reverse().map((h,i)=><tr key={i} style={{borderTop:`1px solid ${C.line}`}}><td style={td}>{h.date.slice(0,10)}</td><td style={td}>{money(h.value)}</td><td style={{...td,color:h.gain>=0?C.green:C.red}}>{money(h.gain)}</td></tr>)}</tbody></table></div>}</Modal>;}
+function Spark({pts}){const w=460,h=140,pad=8;const ys=pts.map(p=>p.value);const minY=Math.min(...ys),maxY=Math.max(...ys),spanY=(maxY-minY)||1;const X=i=>pad+(i/(pts.length-1))*(w-2*pad);const Y=v=>h-pad-((v-minY)/spanY)*(h-2*pad);const dd=pts.map((p,i)=>`${i===0?"M":"L"}${X(i).toFixed(1)} ${Y(p.value).toFixed(1)}`).join(" ");const up=ys[ys.length-1]>=ys[0];return <svg viewBox={`0 0 ${w} ${h}`} style={{width:"100%",background:C.ink,borderRadius:8}}><path d={`${dd} L ${X(pts.length-1)} ${h-pad} L ${X(0)} ${h-pad} Z`} fill={up?"rgba(47,125,82,.25)":"rgba(174,53,40,.25)"}/><path d={dd} fill="none" stroke={up?C.green:C.red} strokeWidth="2"/>{pts.map((p,i)=><circle key={i} cx={X(i)} cy={Y(p.value)} r="2.5" fill={C.brassLt}/>)}</svg>;}
+function Principles({onClose}){const blocks=[["Meaning","Buy a business, not a ticker. Understand how it makes money and want to own it for ten years. If you can't explain it simply, it's Too Hard — pass without regret."],["Moat","A durable edge competitors can't cross: Brand, Toll, Switching, Secret, or Price. Find a business so good an idiot could run it — because someday one will."],["Management","Honest, able, owner-oriented. Watch capital allocation and return on invested capital. Scrutinize hard — most managers destroy value."],["Margin of Safety","Price is what you pay; value is what you get. Estimate a sticker value, then demand a discount (buy at ~half). A wonderful company at a foolish price is still a foolish purchase."],["When a price falls","A drop is opportunity only if the story is intact. Separate a temporary Mr. Market mood from a broken thesis — re-score the four M's before you buy the dip or dump the holding."]];return <Modal title="The discipline" onClose={onClose}>{blocks.map(([h,b])=><div key={h} style={{padding:"12px 0",borderBottom:`1px solid ${C.line}`}}><div style={{color:C.brass,fontFamily:MONO,fontSize:12,letterSpacing:1.5}}>{h.toUpperCase()}</div><p style={{fontSize:14,lineHeight:1.55,margin:"3px 0 0"}}>{b}</p></div>)}</Modal>;}
+function Modal({title,children,onClose,wide}){return <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(21,40,31,.55)",display:"grid",placeItems:"start center",overflow:"auto",padding:16,zIndex:70}}><div onClick={e=>e.stopPropagation()} style={{background:C.paper,borderRadius:12,width:"100%",maxWidth:wide?600:520,border:`2px solid ${C.brass}`,margin:"8px 0"}}><div style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:C.ink,color:C.paper,padding:"12px 16px",borderRadius:"10px 10px 0 0"}}><span style={{fontWeight:700,fontSize:16}}>{title}</span><button onClick={onClose} style={{color:C.paper,background:"none",border:"none",cursor:"pointer"}}><I n="x" s={18}/></button></div><div style={{padding:16}}>{children}</div></div></div>;}
+
+const inp={width:"100%",padding:"8px 10px",borderRadius:7,border:`1px solid ${C.line}`,background:C.card,color:C.ink,fontFamily:MONO,fontSize:13.5};
+const Row=({children})=> <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:4}}>{children}</div>;
+const Field=({label,wide,children})=> <label style={{flex:wide?2:1,minWidth:90,display:"block",marginBottom:6}}><span style={{fontSize:11,color:C.mute,display:"block",marginBottom:3}}>{label}</span>{children}</label>;
+const btn=(bg,fg,border)=>({display:"flex",alignItems:"center",gap:6,background:bg,color:fg,border:`1px solid ${border||bg}`,borderRadius:7,padding:"7px 13px",fontSize:13,fontFamily:MONO,cursor:"pointer"});
+const th={padding:"4px 8px"},td={padding:"5px 8px"};
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>

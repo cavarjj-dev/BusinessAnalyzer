@@ -1,0 +1,14 @@
+{
+  "name": "Rule №1 — The Four M's Ledger",
+  "short_name": "Rule1 Ledger",
+  "description": "A value-investing desk: score companies on Meaning, Moat, Management, Margin of Safety; track positions and performance.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#15281F",
+  "theme_color": "#15281F",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
